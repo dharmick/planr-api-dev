@@ -41,10 +41,19 @@ def user_signup():
     db.session.add(new_user)
     db.session.commit()
 
+    token = jwt.encode(
+            {
+                'public_id': new_user.public_id,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+            },
+            app.config['SECRET_KEY']
+        )
+
     return jsonify(
         {
             'success': True,
-            'message': 'Signup successfull'
+            'message': 'Signup successfull',
+            'token': token
         }
     )
 
