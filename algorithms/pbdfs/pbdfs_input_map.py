@@ -5,7 +5,7 @@ destination = 887
 departure_time = 9
 
 # 12 hours (till evening 9 PM)
-time_budget = 12
+time_budget = 12.5
 
 # estimated user ratings
 # key = poi id

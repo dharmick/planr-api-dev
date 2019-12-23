@@ -1,13 +1,42 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app as app
 import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
+from functools import wraps
+
+
 
 authentication_bp = Blueprint('authentication_bp', __name__)
 
 from models import Users
-from app import db, app
+from database import db
+
+
+# ============================
+#     CHECK PRESENCE OF TOKEN
+# ============================
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authentication')
+
+        if not token:
+            return jsonify({
+                'message': 'Token missing'
+            }), 401
+
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            current_user = Users.query.filter_by(public_id=data['public_id']).first()
+        except:
+            return jsonify({
+                'message': 'Token invalid',
+            }), 401
+
+        return f(current_user, *args, **kwargs)
+    return decorated
 
 
 # ====================
@@ -38,22 +67,22 @@ def user_signup():
         admin=False
     )
 
-    db.session.add(new_user)
-    db.session.commit()
-
     token = jwt.encode(
             {
                 'public_id': new_user.public_id,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
             },
             app.config['SECRET_KEY']
         )
+
+    db.session.add(new_user)
+    db.session.commit()
 
     return jsonify(
         {
             'success': True,
             'message': 'Signup successfull',
-            'token': token
+            'token': token,
         }
     )
 

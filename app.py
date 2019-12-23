@@ -1,20 +1,24 @@
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from database import db
 import config
 from dotenv import load_dotenv
+from views.schedule import schedule_bp
+from views.authentication import authentication_bp
 load_dotenv()
 
 # creating app
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+db.init_app(app)
 
 
 # registering blueprints
-from views.authentication import authentication_bp
+
+app.register_blueprint(schedule_bp)
 app.register_blueprint(authentication_bp)
+
 
 
 # Home route

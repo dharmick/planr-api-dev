@@ -22,8 +22,8 @@
 import copy
 from pprint import pprint
 import math
-import matplotlib.pyplot as plt
-from pbdfs_input_map import pois, departure_time, time_budget, user_ratings, source, destination
+# import matplotlib.pyplot as plt
+# from pbdfs_input_map import pois, departure_time, time_budget, user_ratings, source, destination
 
 output = {
     'route': [],
@@ -130,7 +130,8 @@ def prefixDFS(ordered_remaining_pois, current_node):
 
                             if (new_happiness > output['happiness']) or \
                             (new_happiness == output['happiness'] and \
-                            new_starting_time_of_ending_poi < output['starting_time_of_ending_poi']):
+                            new_starting_time_of_ending_poi + pois[k]['time_to_spend'] + distance_matrix[k][destination] < \
+                            output['starting_time_of_ending_poi'] + pois[output['route'][-1]]['time_to_spend'] + distance_matrix[output['route'][-1]][destination]):
                                 output['route'] = new_path
                                 output['happiness'] = new_happiness
                                 output['starting_time_of_ending_poi'] = new_starting_time_of_ending_poi
@@ -141,26 +142,7 @@ def prefixDFS(ordered_remaining_pois, current_node):
     # print("ended")
 
 
-
-if __name__ == '__main__':
-    places = list(user_ratings.keys())
-
-    for from_place in places:
-        distance_matrix[from_place] = {}
-        for to_place in places:
-            distance_matrix[from_place][to_place] =  math.sqrt((pois[from_place]['latitude'] - pois[to_place]['latitude'])**2 + \
-            (pois[from_place]['longitude'] - pois[to_place]['longitude'])**2) / 20
-
-    # pprint(distance_matrix)
-
-
-    places.remove(source)
-    if destination in places:
-        # check required because source and destination can be equal
-        places.remove(destination)
-    sorted_places = sorted(places, key=user_ratings.get, reverse=True)
-    prefixDFS(sorted_places, [])
-
+def showPlot():
     x = []
     y = []
     text = []
@@ -182,8 +164,62 @@ if __name__ == '__main__':
     line_x.append(pois[destination]['longitude'])
     line_y.append(pois[destination]['latitude'])
     plt.plot(line_x, line_y)
+    plt.show()
+
+
+def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
+    places = list(user_ratings.keys())
+
+    for from_place in places:
+        distance_matrix[from_place] = {}
+        for to_place in places:
+            distance_matrix[from_place][to_place] =  math.sqrt((pois[from_place]['latitude'] - pois[to_place]['latitude'])**2 + \
+            (pois[from_place]['longitude'] - pois[to_place]['longitude'])**2) / 20
+    # pprint(distance_matrix)
+
+    if source in places:
+        places.remove(source)
+    if destination in places:
+        places.remove(destination)
+
+
+    sorted_places = sorted(places, key=user_ratings.get, reverse=True)
+    prefixDFS(sorted_places, [])
+    output['route'].append(destination)
+
+    schedule = []
+    time = departure_time
+
+    for index, poi in enumerate(output['route']):
+        # print("*****************", poi)
+        item_at_poi = {}
+        item_at_poi['type'] = 'at_poi'
+        item_at_poi['place_id'] = poi
+        item_at_poi['starting_time'] = time
+        if poi != source and poi != destination:
+            item_at_poi['time_to_spend'] = pois[poi]['time_to_spend']
+            time += item_at_poi['time_to_spend']
+        schedule.append(item_at_poi)
+
+        if poi != destination:
+            item_between_poi = {}
+            item_between_poi['type'] = 'between_poi'
+            item_between_poi['travel_mode'] = 'car'
+            item_between_poi['time_to_travel'] = distance_matrix[poi][output['route'][index+1]]
+            item_between_poi['starting_time'] = time
+            time += item_between_poi['time_to_travel']
+            schedule.append(item_between_poi)
 
     # pprint(tree)
-    print(output)
+    # print(output)
+    # pprint(schedule)
+    return schedule
 
-    plt.show()
+
+
+
+# if __name__ == '__main__':
+
+#     get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix)
+
+#     showPlot()
