@@ -39,23 +39,25 @@ def matrix_factorization(R, P, Q, K, steps=5000, alpha=0.0002, beta=0.02):
     return P, Q.T
 
 
-if __name__ == "__main__":
+def run_matrix_factorization(user_poi_ratings_matrix):
+
+    R = user_poi_ratings_matrix
     # reader = csv.reader(open("user_poi.csv", "rb"), delimiter=",")
     # x = list(reader)
     # result = np.array(x).astype("float")
     # print(result)
 
-    data_all = np.loadtxt(open("user_poi - _.csv", "rb"), dtype=np.str, delimiter=",")
+    # data_all = np.loadtxt(open("user_poi - _.csv", "rb"), dtype=np.str, delimiter=",")
 
-    user_ids = data_all[1:, 0]
-    poi_ids = data_all[0, 2:]
+    # user_ids = data_all[1:, 0]
+    # poi_ids = data_all[0, 2:]
 
-    data = np.delete(data_all, 0, axis=0)
-    data = np.delete(data, [0,1], axis=1)
+    # data = np.delete(data_all, 0, axis=0)
+    # data = np.delete(data, [0,1], axis=1)
 
-    data[data=='']='0'
+    # data[data=='']='0'
 
-    R = data.astype(np.float)
+    # R = data.astype(np.float)
 
     # print(R)
     # print(R)
@@ -82,42 +84,52 @@ if __name__ == "__main__":
     P = np.random.rand(N,K)
     Q = np.random.rand(M,K)
 
+
     nP, nQ = matrix_factorization(R, P, Q, K)
+
+    # return np, nQ
+
     nR = np.dot(nP, nQ.T)
+    return nR
+    # print(nR)
 
-    print(nR)
+    # # rating = {
+    # #     1: {
+    # #         1: 4.2,
+    # #         2: 4.5,
+    # #     }
+    # # }
 
-    # rating = {
-    #     1: {
-    #         1: 4.2,
-    #         2: 4.5,
-    #     }
-    # }
-
-    rui_star = {}
-
-
-    for i in range(len(nR)):
-            rui_star[user_ids[i]] = {}
-            for j in range(len(nR[i])):
-                # print(i, j)
-                rui_star[user_ids[i]][poi_ids[j]] = nR[i][j]
+    # rui_star = {}
 
 
-    # sorted_x = dict(sorted(rui_star.items(), key=lambda kv: kv[1], reverse=True))
-    # print(rui_star[1])
+    # for i in range(len(nR)):
+    #         rui_star[user_ids[i]] = {}
+    #         for j in range(len(nR[i])):
+    #             # print(i, j)
+    #             rui_star[user_ids[i]][poi_ids[j]] = nR[i][j]
 
-    fp = open("rui_star.json","w")
-    json.dump(rui_star, fp)
+
+    # # sorted_x = dict(sorted(rui_star.items(), key=lambda kv: kv[1], reverse=True))
+    # # print(rui_star[1])
+
+    # fp = open("rui_star.json","w")
+    # json.dump(rui_star, fp)
 
 
-    # print(nP)
-    print(rui_star)
-    # print(nQ)
-    print("------------------")
+    # # print(nP)
+    # print(rui_star)
+    # # print(nQ)
+    # print("------------------")
 
-    print(len(nR))
-    # data = []
+    # print(len(nR))
+    # # data = []
+
+
+
+
+
+
 
     # for i in range(len(nR)):
         # print('poi', i+1)
