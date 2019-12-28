@@ -3,9 +3,8 @@ from flask import Flask
 from database import db
 import config
 from dotenv import load_dotenv
-from views.schedule import schedule_bp
 from views.authentication import authentication_bp
-from views.matrix_factorization import matrix_factorization_bp
+from views.algorithms import algorithms_bp
 load_dotenv()
 
 # creating app
@@ -16,10 +15,8 @@ db.init_app(app)
 
 
 # registering blueprints
-
-app.register_blueprint(schedule_bp)
 app.register_blueprint(authentication_bp)
-app.register_blueprint(matrix_factorization_bp)
+app.register_blueprint(algorithms_bp)
 
 
 
