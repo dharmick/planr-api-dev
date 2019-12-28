@@ -12,34 +12,34 @@ class Users(db.Model):
     password = db.Column(db.String(80))
     admin = db.Column(db.Boolean)
 
+    ratings = db.relationship("UserRatings", backref='user')
+
 class Cities(db.Model):
     __tablename__ = 'cities'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30))
 
+    pois = db.relationship("Pois", backref='city')
+    ratings = db.relationship("UserRatings", backref='city')
+
+
 class UserRatings(db.Model):
     __tablename__ = 'user_ratings'
 
     id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Float)
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship("Users")
-
     poi_id = db.Column(db.Integer, db.ForeignKey('pois.id'))
-    poi = db.relationship("Pois")
+    city_id = db.Column(db.Integer, db.ForeignKey('cities.id'))
 
-    rating = db.Column(db.Float)
 
 
 class Pois(db.Model):
     __tablename__ = 'pois'
 
     id = db.Column(db.Integer, primary_key=True)
-
-    city_id = db.Column(db.Integer, db.ForeignKey('cities.id'))
-    city = db.relationship("Cities")
-
     name = db.Column(db.String(50))
     opening_time = db.Column(db.Float)
     closing_time = db.Column(db.Float)
@@ -48,5 +48,10 @@ class Pois(db.Model):
     time_to_spend = db.Column(db.Float)
     category = db.Column(db.String(15))
     average_rating = db.Column(db.Float)
+
+    city_id = db.Column(db.Integer, db.ForeignKey('cities.id'))
+
+    ratings = db.relationship("UserRatings", backref='poi')
+
 
 
