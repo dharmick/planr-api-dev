@@ -33,11 +33,11 @@ output = {
 
 tree = {}
 
-distance_matrix = {}
 
 # is it possible to go from i to j, get full service at j and still reach destination within time budget?
-def sat(i, j, starting_i):
+def sat(i, j, starting_i, user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
     # print("in sat with ",i,j,starting_i)
+    starting_i = float(starting_i)
     reaching_j = starting_i + pois[i]['time_to_spend'] + distance_matrix[i][j]
     opening_j = pois[j]['opening_time']
     starting_j = max(reaching_j, opening_j)
@@ -63,7 +63,7 @@ def prefix(i, j):
 
 
 # main recursive algo
-def prefixDFS(ordered_remaining_pois, current_node):
+def prefixDFS(ordered_remaining_pois, current_node, user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
     # print("\n\n*************************\n\n")
     # print('tree is ', tree)
     # print("ordered remainin pois: ", ordered_remaining_pois)
@@ -79,7 +79,7 @@ def prefixDFS(ordered_remaining_pois, current_node):
         # print("child node: ", child_node)
 
         if len(child_node) == 1:
-            if sat(source, poi, departure_time):
+            if sat(source, poi, departure_time, user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
                 # print("sat returned true")
                 node = {}
                 node['happiness'] = user_ratings[poi]
@@ -92,7 +92,7 @@ def prefixDFS(ordered_remaining_pois, current_node):
                     }
                 ]
                 tree["*".join(str(x) for x in child_node)] = node
-                prefixDFS(child_ordered_remaining_pois, child_node)
+                prefixDFS(child_ordered_remaining_pois, child_node, user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix)
 
         else:
             for k in child_node:
@@ -101,7 +101,7 @@ def prefixDFS(ordered_remaining_pois, current_node):
 
                 if "*".join(str(x) for x in temp_child_node) in tree:
                     for l in tree["*".join(str(x) for x in temp_child_node)]['feasible_routes']:
-                        if sat(l['ending_poi'], k, l['starting_time_of_ending_poi']):
+                        if sat(l['ending_poi'], k, l['starting_time_of_ending_poi'], user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
                             child_node_string = "*".join(str(x) for x in child_node)
                             temp_child_node_string = "*".join(str(x) for x in temp_child_node)
 
@@ -138,11 +138,11 @@ def prefixDFS(ordered_remaining_pois, current_node):
 
 
             if "*".join(str(x) for x in temp_child_node) in tree:
-                prefixDFS(child_ordered_remaining_pois, child_node)
+                prefixDFS(child_ordered_remaining_pois, child_node, user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix)
     # print("ended")
 
 
-def showPlot():
+def showPlot(user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
     x = []
     y = []
     text = []
@@ -170,11 +170,11 @@ def showPlot():
 def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
     places = list(user_ratings.keys())
 
-    for from_place in places:
-        distance_matrix[from_place] = {}
-        for to_place in places:
-            distance_matrix[from_place][to_place] =  math.sqrt((pois[from_place]['latitude'] - pois[to_place]['latitude'])**2 + \
-            (pois[from_place]['longitude'] - pois[to_place]['longitude'])**2) / 20
+    # for from_place in places:
+    #     distance_matrix[from_place] = {}
+    #     for to_place in places:
+    #         distance_matrix[from_place][to_place] =  math.sqrt((pois[from_place]['latitude'] - pois[to_place]['latitude'])**2 + \
+    #         (pois[from_place]['longitude'] - pois[to_place]['longitude'])**2) / 20
     # pprint(distance_matrix)
 
     if source in places:
@@ -184,7 +184,8 @@ def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, 
 
 
     sorted_places = sorted(places, key=user_ratings.get, reverse=True)
-    prefixDFS(sorted_places, [])
+    sorted_places = sorted_places[:20]
+    prefixDFS(sorted_places, [], user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix)
     output['route'].append(destination)
 
     schedule = []
@@ -195,7 +196,9 @@ def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, 
         item_at_poi = {}
         item_at_poi['type'] = 'at_poi'
         item_at_poi['place_id'] = poi
+        item_at_poi['place_name'] = pois[poi]['name']
         item_at_poi['starting_time'] = time
+
         if poi != source and poi != destination:
             item_at_poi['time_to_spend'] = pois[poi]['time_to_spend']
             time += item_at_poi['time_to_spend']

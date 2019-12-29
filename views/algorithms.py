@@ -93,22 +93,59 @@ def generate_pbdfs_schedule(current_user):
     city_id = data['city_id']
     source = data['source']
     destination = data['destination']
-    departure_time = data['departure_time']
-    time_budget = data['time_budget']
+    departure_time = float(data['departure_time'])
+    time_budget = float(data['time_budget'])
 
 
-    user_ratings = db.session.execute(
-        "SELECT * FROM cities"
+    expected_ratings_from_db = mongodb['expected_ratings'].find_one({
+        'city_id': int(city_id),
+        'user_id': current_user.id
+    }, {
+        'expected_rating': 1,
+        '_id': 0
+    })['expected_rating']
+
+    pois_from_db = db.session.execute(
+        "SELECT id, latitude, longitude, opening_time, closing_time, time_to_spend, category, name, average_rating FROM pois WHERE city_id = :city_id",
+        {
+            'city_id': city_id
+        }
     )
-    names = [row[0] for row in user_ratings]
-    print (names)
 
+    distance_matrix_from_db = mongodb['distance_matrix'].find_one({
+        'city_id': city_id
+    })['distances']
 
-    # print(current_user.public_id)
+    pois = {}
+    expected_ratings = {}
+    for poi in pois_from_db:
+        if str(poi.id) not in expected_ratings_from_db:
+            expected_ratings[str(poi.id)] = poi.average_rating
+        else:
+            expected_ratings[str(poi.id)] = expected_ratings_from_db[str(poi.id)]
+        pois[str(poi.id)] = {
+            'latitude': poi.latitude,
+            'longitude': poi.longitude,
+            'opening_time': poi.opening_time,
+            'closing_time': poi.closing_time,
+            'time_to_spend': poi.time_to_spend,
+            'category': poi.category,
+            'name': poi.name,
+        }
 
-    return jsonify({
-        'ratings': current_user.id
-    })
+    # print(distance_matrix_from_db)
+
+    schedule = get_pbdfs_schedule(
+        user_ratings = expected_ratings,
+        pois = pois,
+        source = source,
+        destination = destination,
+        departure_time = departure_time,
+        time_budget = time_budget,
+        distance_matrix = distance_matrix_from_db
+    )
+
+    return jsonify(schedule)
 
 
 

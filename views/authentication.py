@@ -111,7 +111,7 @@ def user_login():
         token = jwt.encode(
             {
                 'public_id': user.public_id,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
             },
             app.config['SECRET_KEY']
         )
