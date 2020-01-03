@@ -19,6 +19,8 @@ class Cities(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30))
+    description = db.Column(db.String(500))
+    image = db.Column(db.String(100))
 
     pois = db.relationship("Pois", backref='city')
     ratings = db.relationship("UserRatings", backref='city')
