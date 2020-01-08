@@ -57,8 +57,6 @@ def get_city(current_user):
 
         data = dict(city)
 
-
-
         ratings_from_db = db.session.execute("""
             SELECT rating, count(rating)
             FROM user_ratings WHERE city_id = :city_id

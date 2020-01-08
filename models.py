@@ -50,6 +50,7 @@ class Pois(db.Model):
     time_to_spend = db.Column(db.Float)
     category = db.Column(db.String(15))
     average_rating = db.Column(db.Float)
+    image = db.Column(db.String(100))
 
     city_id = db.Column(db.Integer, db.ForeignKey('cities.id'))
 

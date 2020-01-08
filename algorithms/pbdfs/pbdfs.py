@@ -168,6 +168,16 @@ def showPlot(user_ratings, pois, source, destination, departure_time, time_budge
 
 
 def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
+    global output
+    output = {
+        'route': [],
+        'happiness': 0,
+        'starting_time_of_ending_poi': 0,
+    }
+
+    global tree
+    tree = {}
+
     places = list(user_ratings.keys())
 
     # for from_place in places:
@@ -197,6 +207,8 @@ def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, 
         item_at_poi['type'] = 'at_poi'
         item_at_poi['place_id'] = poi
         item_at_poi['place_name'] = pois[poi]['name']
+        item_at_poi['latitude'] = pois[poi]['latitude']
+        item_at_poi['longitude'] = pois[poi]['longitude']
         item_at_poi['starting_time'] = time
 
         if poi != source and poi != destination:

@@ -89,63 +89,80 @@ def generate_matrix_factorization():
 @algorithms_bp.route('/generate/pbdfs', methods=['GET'])
 @token_required
 def generate_pbdfs_schedule(current_user):
-    data = request.args
-    city_id = data['city_id']
-    source = data['source']
-    destination = data['destination']
-    departure_time = float(data['departure_time'])
-    time_budget = float(data['time_budget'])
+    try:
+        data = request.args
+        city_id = data['city_id']
+        source = data['source']
+        destination = data['destination']
+        departure_time = float(data['departure_time'])
+        time_budget = float(data['time_budget'])
 
 
-    expected_ratings_from_db = mongodb['expected_ratings'].find_one({
-        'city_id': int(city_id),
-        'user_id': current_user.id
-    }, {
-        'expected_rating': 1,
-        '_id': 0
-    })['expected_rating']
+        expected_ratings_from_db = mongodb['expected_ratings'].find_one({
+            'city_id': int(city_id),
+            'user_id': current_user.id
+        }, {
+            'expected_rating': 1,
+            '_id': 0
+        })['expected_rating']
 
-    pois_from_db = db.session.execute(
-        "SELECT id, latitude, longitude, opening_time, closing_time, time_to_spend, category, name, average_rating FROM pois WHERE city_id = :city_id",
-        {
+        pois_from_db = db.session.execute(
+            "SELECT id, latitude, longitude, opening_time, closing_time, time_to_spend, category, name, average_rating FROM pois WHERE city_id = :city_id",
+            {
+                'city_id': city_id
+            }
+        )
+
+        distance_matrix_from_db = mongodb['distance_matrix'].find_one({
             'city_id': city_id
-        }
-    )
+        })['distances']
 
-    distance_matrix_from_db = mongodb['distance_matrix'].find_one({
-        'city_id': city_id
-    })['distances']
+        pois = {}
+        expected_ratings = {}
+        for poi in pois_from_db:
+            if str(poi.id) not in expected_ratings_from_db:
+                expected_ratings[str(poi.id)] = poi.average_rating
+            else:
+                expected_ratings[str(poi.id)] = expected_ratings_from_db[str(poi.id)]
+            pois[str(poi.id)] = {
+                'latitude': poi.latitude,
+                'longitude': poi.longitude,
+                'opening_time': poi.opening_time,
+                'closing_time': poi.closing_time,
+                'time_to_spend': poi.time_to_spend,
+                'category': poi.category,
+                'name': poi.name,
+            }
 
-    pois = {}
-    expected_ratings = {}
-    for poi in pois_from_db:
-        if str(poi.id) not in expected_ratings_from_db:
-            expected_ratings[str(poi.id)] = poi.average_rating
-        else:
-            expected_ratings[str(poi.id)] = expected_ratings_from_db[str(poi.id)]
-        pois[str(poi.id)] = {
-            'latitude': poi.latitude,
-            'longitude': poi.longitude,
-            'opening_time': poi.opening_time,
-            'closing_time': poi.closing_time,
-            'time_to_spend': poi.time_to_spend,
-            'category': poi.category,
-            'name': poi.name,
-        }
+        # print(distance_matrix_from_db)
 
-    # print(distance_matrix_from_db)
+        schedule = get_pbdfs_schedule(
+            user_ratings = expected_ratings,
+            pois = pois,
+            source = source,
+            destination = destination,
+            departure_time = departure_time,
+            time_budget = time_budget,
+            distance_matrix = distance_matrix_from_db
+        )
 
-    schedule = get_pbdfs_schedule(
-        user_ratings = expected_ratings,
-        pois = pois,
-        source = source,
-        destination = destination,
-        departure_time = departure_time,
-        time_budget = time_budget,
-        distance_matrix = distance_matrix_from_db
-    )
+        db.session.commit()
 
-    return jsonify(schedule)
+        return jsonify({
+            'success': True,
+            'data': schedule
+        })
+
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": "Something went wrong."
+        })
+
+    finally:
+        db.session.close()
 
 
 
