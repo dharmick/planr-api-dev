@@ -51,7 +51,7 @@ class Pois(db.Model):
     category = db.Column(db.String(15))
     average_rating = db.Column(db.Float)
     image = db.Column(db.String(100))
-
+    description = db.Column(db.String(500))
     city_id = db.Column(db.Integer, db.ForeignKey('cities.id'))
 
     ratings = db.relationship("UserRatings", backref='poi')
