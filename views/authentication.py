@@ -131,3 +131,80 @@ def user_login():
         }
     ), 401
 
+# ====================
+#     GET ALL USERS
+# ====================
+
+@authentication_bp.route('/users', methods = ['GET'])
+@token_required
+def get_all_users(current_user):
+
+    if not current_user.admin:
+        return jsonify({
+            'message': 'Cannot perform that function!'
+        })
+
+    users = Users.query.all()
+
+    output = []
+
+    for user in users:
+        user_data = {}
+        user_data['public_id'] = user.public_id
+        user_data['name'] = user.name
+        user_data['email'] = user.email
+        user_data['password'] = user.password
+        user_data['admin'] = user.admin
+        output.append(user_data)
+        
+    return jsonify({'users': output})
+
+# ====================
+#     PASSWORD RESET
+# ====================
+@authentication_bp.route('/reset-password', methods=['PUT'])
+@token_required
+def resetpassword(current_user):
+
+    public_id = current_user.public_id
+
+    user = Users.query.filter_by(public_id = public_id).first()
+
+    # user not found
+    if not user:
+        return jsonify(
+            {
+                'success': False,
+                'message': 'Authentication failed'
+            }
+        ), 401
+    
+    data = request.get_json()
+
+    # password matching
+    if check_password_hash(user.password, data['password']):
+        if data['newpassword'] == data['confirmpassword']:
+            hashed_password = generate_password_hash(data['newpassword'], method='sha256')
+            user.password = hashed_password
+            db.session.commit()
+            return jsonify(
+                {
+                    'success': True,
+                    'message': 'Password changed successfully!',
+                }
+            )
+        else:
+            return jsonify(
+                {
+                    'success': False,
+                    'message': 'Password did not match. Enter again!',
+                }
+            )
+        
+    # password not matched
+    return jsonify(
+        {
+            'success': False,
+            'message': 'Please enter correct password!'
+        }
+    ), 401
