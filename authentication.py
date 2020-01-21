@@ -237,7 +237,8 @@ def forgotpassword():
     # Call to send email function in eml.py
     send(data['email'])
 
-    lnk = 'http://127.0.0.1:5000/resetpassword?token='
+    token_str = token.decode("utf-8")
+    lnk = 'http://127.0.0.1:5000/reset-password?token='+token_str 
     
     return jsonify(
         {
@@ -251,14 +252,29 @@ def forgotpassword():
 # ====================
 #   RESET PASSWORD 
 # ====================
-@authentication_bp.route('/reset-password', methods=['PUT'])
-@token_required
-def resetpassword(current_user):
+@authentication_bp.route('/reset-password', methods=['GET','PUT'])
+def resetpassword():
 
-    data = request.get_json()
+    passw = request.get_json()
 
-    if data['newpassword'] == data['confirmpassword']:
-        hashed_password = generate_password_hash(data['newpassword'], method='sha256')
+    token = request.args.get('token')
+
+    if not token:
+        return jsonify({
+            'message': 'Token missing'
+        }), 401
+
+    try:
+        data = jwt.decode(token, app.config['SECRET_KEY'])
+        current_user = Users.query.filter_by(public_id=data['public_id']).first()
+    except:
+        return jsonify({
+            'message': 'Token invalid',
+        }), 401
+
+
+    if passw['newpassword'] == passw['confirmpassword']:
+        hashed_password = generate_password_hash(passw['newpassword'], method='sha256')
         current_user.password = hashed_password
         db.session.commit()
         return jsonify(
