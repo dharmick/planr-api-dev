@@ -6,3 +6,8 @@
 0a
 myenv/
 .vscode/
+sendgrid.env
+.env
+eml2.py
+eml.py
+eml.pyc

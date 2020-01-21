@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app as app
 from database import db
-from views.authentication import token_required
+from authentication import token_required
 from algorithms.matrix_factorization.matrix_factorization import run_matrix_factorization
 from algorithms.pbdfs.pbdfs import get_pbdfs_schedule
 from database import mongodb

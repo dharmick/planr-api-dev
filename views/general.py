@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from views.authentication import token_required
+from authentication import token_required
 from database import db
 
 general_bp = Blueprint('general_bp', __name__)

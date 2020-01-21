@@ -4,8 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
 from functools import wraps
-
-
+from emailer import send
 
 authentication_bp = Blueprint('authentication_bp', __name__)
 
@@ -160,24 +159,24 @@ def get_all_users(current_user):
     return jsonify({'users': output})
 
 # ====================
-#     PASSWORD RESET
+#   PASSWORD CHANGE
 # ====================
-@authentication_bp.route('/reset-password', methods=['PUT'])
+@authentication_bp.route('/change-password', methods=['PUT'])
 @token_required
-def resetpassword(current_user):
+def changepassword(current_user):
 
     public_id = current_user.public_id
 
     user = Users.query.filter_by(public_id = public_id).first()
 
     # user not found
-    if not user:
-        return jsonify(
-            {
-                'success': False,
-                'message': 'Authentication failed'
-            }
-        ), 401
+    # if not user:
+    #     return jsonify(
+    #         {
+    #             'success': False,
+    #             'message': 'Authentication failed'
+    #         }
+    #     ), 401
     
     data = request.get_json()
 
@@ -208,3 +207,70 @@ def resetpassword(current_user):
             'message': 'Please enter correct password!'
         }
     ), 401
+
+# ====================
+#   FORGOT PASSWORD 
+# ====================
+@authentication_bp.route('/forgot-password', methods=['POST'])
+def forgotpassword():
+    data = request.get_json()
+
+    user = Users.query.filter_by(email = data['email']).first()
+
+    # user not found
+    if not user:
+        return jsonify(
+            {
+                'success': False,
+                'message': 'User not found!'
+            }
+        ), 401
+    
+    token = jwt.encode(
+            {
+                'public_id': user.public_id,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+            },
+            app.config['SECRET_KEY']
+        )
+
+    # Call to send email function in eml.py
+    send(data['email'])
+
+    lnk = 'http://127.0.0.1:5000/resetpassword?token='
+    
+    return jsonify(
+        {
+            'success': True,
+            'message': 'Email sent succesfully!!',
+            'token': token,
+            'Link': lnk
+        }
+    ), 200
+
+# ====================
+#   RESET PASSWORD 
+# ====================
+@authentication_bp.route('/reset-password', methods=['PUT'])
+@token_required
+def resetpassword(current_user):
+
+    data = request.get_json()
+
+    if data['newpassword'] == data['confirmpassword']:
+        hashed_password = generate_password_hash(data['newpassword'], method='sha256')
+        current_user.password = hashed_password
+        db.session.commit()
+        return jsonify(
+            {
+                'success': True,
+                'message': 'Password changed successfully!',
+            }
+        ), 200
+    else:
+        return jsonify(
+            {
+                'success': False,
+                'message': 'Password did not match. Enter again!',
+            }
+        )

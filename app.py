@@ -3,7 +3,7 @@ from flask import Flask
 from database import db
 import config
 from dotenv import load_dotenv
-from views.authentication import authentication_bp
+from authentication import authentication_bp
 from views.algorithms import algorithms_bp
 from views.general import general_bp
 load_dotenv()
