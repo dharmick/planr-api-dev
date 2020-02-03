@@ -140,7 +140,15 @@ def get_PoI(current_user):
                 "poi_id": poi_id
             }
             ).fetchone()
-            data['ratings'] = row['average_rating']
+            
+            total_ratings_count = 0
+            sum = 0
+            ratings = []
+            data['ratings'] = {
+                'total_count': total_ratings_count,
+                'average': row['average_rating'],
+                'individual_ratings': ratings
+            } 
         
         else:
             total_ratings_count = 0
