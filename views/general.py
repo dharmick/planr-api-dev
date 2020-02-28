@@ -1,14 +1,13 @@
 from flask import Blueprint, jsonify, request
 from authentication import token_required
 from database import db
-
+from models import UserRatings
 general_bp = Blueprint('general_bp', __name__)
 
 
 # ========================
-# GET ALL CITIES
+#   GET ALL CITIES
 # ========================
-
 @general_bp.route('/getAllCities', methods=['GET'])
 @token_required
 def get_all_routes(current_user):
@@ -32,10 +31,9 @@ def get_all_routes(current_user):
     finally:
         db.session.close()
 
-# =========================
-# GET CITY DETAILS
-# ========================
-
+# =====================
+#   GET CITY DETAILS
+# =====================
 @general_bp.route('/getCity', methods=['GET'])
 @token_required
 def get_city(current_user):
@@ -105,6 +103,9 @@ def get_city(current_user):
     finally:
         db.session.close()
 
+# ========================
+#   GET POI DETAILS API 
+# ========================
 @general_bp.route('/getPoI', methods=['GET'])
 @token_required
 def get_PoI(current_user):
@@ -179,6 +180,60 @@ def get_PoI(current_user):
             "success": False,
             "message": "Something went wrong.",
             "rating": avg_rating
+        })
+
+    finally:
+        db.session.close()
+
+# ======================
+#   USER RATINGS API 
+# ======================
+@general_bp.route('/user-ratings',methods=['POST'])
+@token_required
+def getuserratings(current_user):
+    try:
+        params = request.args
+
+        ratings_from_db = UserRatings.query.filter_by(user_id = current_user.id, poi_id = params['poi_id']).first()
+        
+        if not ratings_from_db:
+            # print("No ratings found")
+            
+            new_rating = UserRatings(
+            rating =  params['rating'],
+            user_id = current_user.id,
+            poi_id = params['poi_id'],
+            city_id = params['city_id']
+            )
+
+            db.session.add(new_rating)
+            db.session.commit()
+
+            return jsonify(
+                {
+                    'success': True,
+                    'message': 'New Rating added Successfully'
+                }
+            )
+        
+        else:
+            # print("Ratings Updated Successfully")
+            ratings_from_db.rating = params['rating']
+            db.session.commit()
+
+            return jsonify(
+                {
+                    'success': True,
+                    'message': 'Rating Updated Successfully!1'
+                }
+            )
+    
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": "Something went wrong.",
         })
 
     finally:
