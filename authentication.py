@@ -5,15 +5,32 @@ import jwt
 import datetime
 from functools import wraps
 from emailer import send
+import random
+import math
 
 authentication_bp = Blueprint('authentication_bp', __name__)
 
 from models import Users
+from models import OTPS
 from database import db
+
+# ============================
+#   OTP GENERATOR
+# ============================
+
+def OTP_generator():
+    digits = [i for i in range(0, 10)]
+    random_str = ""
+
+    for i in range(6):
+        index = math.floor(random.random()*10)
+        random_str += str(digits[index])
+
+    return random_str
 
 
 # ============================
-#     CHECK PRESENCE OF TOKEN
+#   CHECK PRESENCE OF TOKEN
 # ============================
 
 def token_required(f):
@@ -161,7 +178,7 @@ def get_all_users(current_user):
 # ====================
 #   PASSWORD CHANGE
 # ====================
-@authentication_bp.route('/change-password', methods=['PUT'])
+@authentication_bp.route('/change-password', methods=['POST'])
 @token_required
 def changepassword(current_user):
 
@@ -196,17 +213,17 @@ def changepassword(current_user):
             return jsonify(
                 {
                     'success': False,
-                    'message': 'Password did not match. Enter again!',
+                    'message': 'Passwords did not match. Enter again!',
                 }
             )
         
     # password not matched
     return jsonify(
         {
-            'success': False,
+            'success': True,
             'message': 'Please enter correct password!'
         }
-    ), 401
+    ), 200
 
 # ====================
 #   FORGOT PASSWORD 
@@ -237,6 +254,15 @@ def forgotpassword():
     # Call to send email function in eml.py
     send(data['email'])
 
+    OTP = OTP_generator()
+    new_otp = OTPS(
+        user_id = user.id,
+        email = data['email'],
+        otp = OTP
+    )
+    db.session.add(new_otp)
+    db.session.commit()
+
     token_str = token.decode("utf-8")
     lnk = 'http://127.0.0.1:5000/reset-password?token='+token_str 
     
@@ -244,10 +270,38 @@ def forgotpassword():
         {
             'success': True,
             'message': 'Email sent succesfully!!',
+            'OTP': OTP,
             'token': token,
             'Link': lnk
         }
     ), 200
+
+
+# ====================
+#   VERIFY OTP 
+# ====================
+@authentication_bp.route('/verify-otp', methods=['POST'])
+def verifyotp():
+    data = request.get_json()
+
+    row = OTPS.query.filter_by(email=data['email'],otp=data['otp']).first()
+
+    if not row:
+        return jsonify(
+            {
+                'success': False,
+                'message': 'OTP is Incorrect. Enter Again!'
+            }
+        ), 200
+
+    if data['otp'] == row.otp:
+        return jsonify(
+            {
+                'success': True,
+                'message': 'Verification Successful!'
+            }
+        ), 200
+
 
 # ====================
 #   RESET PASSWORD 

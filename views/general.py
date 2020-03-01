@@ -3,6 +3,7 @@ from authentication import token_required
 from database import db
 from models import UserRatings
 general_bp = Blueprint('general_bp', __name__)
+import math
 
 
 # ========================
@@ -71,9 +72,15 @@ def get_city(current_user):
             total_ratings_count += row.count
             ratings.append(dict(row))
 
+        if sum == 0 or total_ratings_count == 0:
+            	avg = 0
+        else:
+        	avg = sum/total_ratings_count
+        	avg = int(math.ceil(avg*10)) / 10
+
         data['ratings'] = {
             'total_count': total_ratings_count,
-            'average': 0 if sum == 0 else sum/total_ratings_count,
+            'average': avg,
             'individual_ratings': ratings
         }
 
@@ -114,7 +121,7 @@ def get_PoI(current_user):
         poi_id = params['poi_id']
 
         poi = db.session.execute(
-            "SELECT id, name, description, image, opening_time, closing_time FROM pois WHERE id = :poi_id", {
+            "SELECT id, name, description, image, opening_time, closing_time,time_to_spend FROM pois WHERE id = :poi_id", {
                 "poi_id": poi_id
             }
         ).first()
@@ -144,11 +151,33 @@ def get_PoI(current_user):
             
             total_ratings_count = 0
             sum = 0
-            ratings = []
+            # ratings = [
+            # 	{
+            #         "rating": 1,
+            #         "count": 1000
+            #     },
+            #     {
+            #         "rating": 2,
+            #         "count": 1500
+            #     },
+            #     {
+            #         "rating": 3,
+            #         "count": 100
+            #     },
+            #     {
+            #         "rating": 4,
+            #         "count": 10
+            #     },
+            #     {
+            #         "rating": 5,
+            #         "count": 5000
+            #     }
+            # ]
+            
             data['ratings'] = {
                 'total_count': total_ratings_count,
                 'average': row['average_rating'],
-                'individual_ratings': ratings
+                'individual_ratings': []
             } 
         
         else:
@@ -160,9 +189,15 @@ def get_PoI(current_user):
                 total_ratings_count += row.count
                 ratings.append(dict(row))
 
+            if sum == 0:
+            	avg = 0
+            else:
+            	avg = sum/total_ratings_count
+            	avg = int(math.ceil(avg*10)) / 10
+
             data['ratings'] = {
                 'total_count': total_ratings_count,
-                'average': 0 if sum == 0 else sum/total_ratings_count,
+                'average': avg,
                 'individual_ratings': ratings
             }
 
@@ -178,8 +213,7 @@ def get_PoI(current_user):
         db.session.rollback()
         return jsonify({
             "success": False,
-            "message": "Something went wrong.",
-            "rating": avg_rating
+            "message": "Something went wrong."
         })
 
     finally:

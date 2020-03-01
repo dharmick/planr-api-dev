@@ -13,6 +13,7 @@ class Users(db.Model):
     admin = db.Column(db.Boolean)
 
     ratings = db.relationship("UserRatings", backref='user')
+    otpstore = db.relationship("OTPS", backref='user')
 
 class Cities(db.Model):
     __tablename__ = 'cities'
@@ -56,5 +57,11 @@ class Pois(db.Model):
 
     ratings = db.relationship("UserRatings", backref='poi')
 
+class OTPS(db.Model):
+    __tablename__= 'otps'
 
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    email = db.Column(db.String(50))
+    otp = db.Column(db.String(6))
 
