@@ -319,25 +319,11 @@ def resetpassword():
 
     passw = request.get_json()
 
-    token = request.args.get('token')
-
-    if not token:
-        return jsonify({
-            'message': 'Token missing'
-        }), 401
-
-    try:
-        data = jwt.decode(token, app.config['SECRET_KEY'])
-        current_user = Users.query.filter_by(public_id=data['public_id']).first()
-    except:
-        return jsonify({
-            'message': 'Token invalid',
-        }), 401
-
+    user = Users.query.filter_by(email = passw['email']).first()
 
     if passw['newpassword'] == passw['confirmpassword']:
         hashed_password = generate_password_hash(passw['newpassword'], method='sha256')
-        current_user.password = hashed_password
+        user.password = hashed_password
         db.session.commit()
         return jsonify(
             {
