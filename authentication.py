@@ -243,35 +243,43 @@ def forgotpassword():
             }
         ), 401
     
-    token = jwt.encode(
-            {
-                'public_id': user.public_id,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
-            },
-            app.config['SECRET_KEY']
-        )
-
-    # Call to send email function in eml.py
-    send(data['email'])
+    # token = jwt.encode(
+    #         {
+    #             'public_id': user.public_id,
+    #             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+    #         },
+    #         app.config['SECRET_KEY']
+    #     )
 
     OTP = OTP_generator()
-    new_otp = OTPS(
+
+    row = OTPS.query.filter_by(user_id = user.id).first()
+
+    if not row:
+        new_otp = OTPS(
         user_id = user.id,
         email = data['email'],
         otp = OTP
-    )
-    db.session.add(new_otp)
-    db.session.commit()
+        )
 
-    token_str = token.decode("utf-8")
-    lnk = 'http://127.0.0.1:5000/reset-password?token='+token_str 
+        db.session.add(new_otp)
+        db.session.commit()
+
+    else:
+        row.otp = OTP
+        db.session.commit()
+
+    # Call to send email function in emailer.py
+    send(data['email'])
+
+    # token_str = token.decode("utf-8")
+    lnk = 'http://127.0.0.1:5000/reset-password?token='
     
     return jsonify(
         {
             'success': True,
             'message': 'Email sent succesfully!!',
             'OTP': OTP,
-            'token': token,
             'Link': lnk
         }
     ), 200
@@ -306,7 +314,7 @@ def verifyotp():
 # ====================
 #   RESET PASSWORD 
 # ====================
-@authentication_bp.route('/reset-password', methods=['GET','PUT'])
+@authentication_bp.route('/reset-password', methods=['POST'])
 def resetpassword():
 
     passw = request.get_json()
