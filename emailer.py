@@ -7,10 +7,18 @@ import sendgrid
 from sendgrid.helpers.mail.mail import Email
 from sendgrid.helpers.mail.mail import Content
 from sendgrid.helpers.mail.mail import Mail
+from bs4 import BeautifulSoup
 
-def send(t_email):
+def send(t_email, otp):
 
-    template_name = "planR_email"
+    soup = BeautifulSoup(open('./templates/planR_email.html'), 'html.parser')
+
+    soup.find(text="Reset Password").replaceWith(str(otp))
+
+    with open("./templates/planr.html", "w", encoding='windows-1252') as file:
+        file.write(str(soup))
+
+    template_name = "planr"
     templateLoader = jinja2.FileSystemLoader(searchpath="templates")
     templateEnv = jinja2.Environment(loader=templateLoader)
     html_template = templateEnv.get_template(template_name + ".html")
@@ -32,4 +40,4 @@ def send(t_email):
         print(response.body)
         print(response.headers)
     except Exception as e:
-        print(e.message)
+        print(e)

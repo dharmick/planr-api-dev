@@ -270,7 +270,7 @@ def forgotpassword():
         db.session.commit()
 
     # Call to send email function in emailer.py
-    send(data['email'])
+    send(data['email'], OTP)
 
     # token_str = token.decode("utf-8")
     lnk = 'http://127.0.0.1:5000/reset-password?token='
