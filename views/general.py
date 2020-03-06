@@ -111,7 +111,7 @@ def get_city(current_user):
         db.session.close()
 
 # ========================
-#   GET POI DETAILS API 
+#   GET POI DETAILS API
 # ========================
 @general_bp.route('/getPoI', methods=['GET'])
 @token_required
@@ -148,7 +148,7 @@ def get_PoI(current_user):
                 "poi_id": poi_id
             }
             ).fetchone()
-            
+
             total_ratings_count = 0
             sum = 0
             # ratings = [
@@ -173,13 +173,13 @@ def get_PoI(current_user):
             #         "count": 5000
             #     }
             # ]
-            
+
             data['ratings'] = {
                 'total_count': total_ratings_count,
                 'average': row['average_rating'],
                 'individual_ratings': []
-            } 
-        
+            }
+
         else:
             total_ratings_count = 0
             sum = 0
@@ -202,7 +202,7 @@ def get_PoI(current_user):
             }
 
         db.session.commit()
-        
+
         return jsonify({
             "success": True,
             "data": data
@@ -220,7 +220,7 @@ def get_PoI(current_user):
         db.session.close()
 
 # ======================
-#   USER RATINGS API 
+#   USER RATINGS API
 # ======================
 @general_bp.route('/user-ratings',methods=['POST'])
 @token_required
@@ -229,10 +229,10 @@ def getuserratings(current_user):
         params = request.args
 
         ratings_from_db = UserRatings.query.filter_by(user_id = current_user.id, poi_id = params['poi_id']).first()
-        
+
         if not ratings_from_db:
             # print("No ratings found")
-            
+
             new_rating = UserRatings(
             rating =  params['rating'],
             user_id = current_user.id,
@@ -249,7 +249,7 @@ def getuserratings(current_user):
                     'message': 'New Rating added Successfully'
                 }
             )
-        
+
         else:
             # print("Ratings Updated Successfully")
             ratings_from_db.rating = params['rating']
@@ -261,7 +261,7 @@ def getuserratings(current_user):
                     'message': 'Rating Updated Successfully!1'
                 }
             )
-    
+
     except Exception as e:
         print(e)
         db.session.rollback()

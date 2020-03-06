@@ -99,6 +99,8 @@ def user_signup():
             'success': True,
             'message': 'Signup successfull',
             'token': token,
+            'name': new_user.name,
+            'email': new_user.email
         }
     )
 
@@ -135,7 +137,9 @@ def user_login():
             {
                 'success': True,
                 'message': 'Login successfull',
-                'token': token
+                'token': token,
+                'name': user.name,
+                'email': user.email
             }
         )
 
@@ -172,7 +176,7 @@ def get_all_users(current_user):
         user_data['password'] = user.password
         user_data['admin'] = user.admin
         output.append(user_data)
-        
+
     return jsonify({'users': output})
 
 # ====================
@@ -194,7 +198,7 @@ def changepassword(current_user):
     #             'message': 'Authentication failed'
     #         }
     #     ), 401
-    
+
     data = request.get_json()
 
     # password matching
@@ -216,7 +220,7 @@ def changepassword(current_user):
                     'message': 'Passwords did not match. Enter again!',
                 }
             )
-        
+
     # password not matched
     return jsonify(
         {
@@ -226,7 +230,7 @@ def changepassword(current_user):
     ), 200
 
 # ====================
-#   FORGOT PASSWORD 
+#   FORGOT PASSWORD
 # ====================
 @authentication_bp.route('/forgot-password', methods=['POST'])
 def forgotpassword():
@@ -242,7 +246,7 @@ def forgotpassword():
                 'message': 'User not found!'
             }
         ), 401
-    
+
     # token = jwt.encode(
     #         {
     #             'public_id': user.public_id,
@@ -274,7 +278,7 @@ def forgotpassword():
 
     # token_str = token.decode("utf-8")
     lnk = 'http://127.0.0.1:5000/reset-password?token='
-    
+
     return jsonify(
         {
             'success': True,
@@ -286,7 +290,7 @@ def forgotpassword():
 
 
 # ====================
-#   VERIFY OTP 
+#   VERIFY OTP
 # ====================
 @authentication_bp.route('/verify-otp', methods=['POST'])
 def verifyotp():
@@ -312,7 +316,7 @@ def verifyotp():
 
 
 # ====================
-#   RESET PASSWORD 
+#   RESET PASSWORD
 # ====================
 @authentication_bp.route('/reset-password', methods=['POST'])
 def resetpassword():
