@@ -46,7 +46,10 @@ def sat(i, j, starting_i, user_ratings, pois, source, destination, departure_tim
     spending_at_j  = pois[j]['time_to_spend']
 
     reaching_destination = starting_j + pois[j]['time_to_spend'] + distance_matrix[j][destination]
-
+    # print("calc reaching j", )
+    # print("reaching j and opening j", reaching_j, opening_j)
+    # print("start and spend at j",starting_j, spending_at_j)
+    # print("in sat comparing", starting_j + spending_at_j, closing_j, reaching_destination, departure_time + time_budget)
     if(starting_j + spending_at_j < closing_j and reaching_destination < departure_time + time_budget):
         return True
     else:
@@ -80,7 +83,7 @@ def prefixDFS(ordered_remaining_pois, current_node, user_ratings, pois, source, 
 
         if len(child_node) == 1:
             if sat(source, poi, departure_time, user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
-                # print("sat returned true")
+                # print("\n\n sat returned true\n\n")
                 node = {}
                 node['happiness'] = user_ratings[poi]
                 node['categories'] = [pois[poi]['category']]
@@ -187,10 +190,11 @@ def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, 
     #         (pois[from_place]['longitude'] - pois[to_place]['longitude'])**2) / 20
     # pprint(distance_matrix)
 
-    if source in places:
-        places.remove(source)
-    if destination in places:
-        places.remove(destination)
+
+    # if source in places:
+    #     places.remove(source)
+    # if destination in places:
+    #     places.remove(destination)
 
 
     sorted_places = sorted(places, key=user_ratings.get, reverse=True)

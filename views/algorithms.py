@@ -7,6 +7,8 @@ from database import mongodb
 import copy
 import requests
 import numpy as np
+from pprint import pprint
+import traceback
 
 
 algorithms_bp = Blueprint('algorithms_bp', __name__)
@@ -92,8 +94,10 @@ def generate_pbdfs_schedule(current_user):
     try:
         data = request.args
         city_id = data['city_id']
-        source = data['source']
-        destination = data['destination']
+        source_lat = data['source_lat']
+        source_lon = data['source_lon']
+        destination_lat = data['destination_lat']
+        destination_lon = data['destination_lon']
         departure_time = float(data['departure_time'])
         time_budget = float(data['time_budget'])
 
@@ -106,6 +110,88 @@ def generate_pbdfs_schedule(current_user):
             '_id': 0
         })['expected_rating']
 
+
+
+        distance_matrix_from_db = mongodb['distance_matrix'].find_one({
+            'city_id': city_id
+        })['distances']
+
+
+############################
+
+        url_list = ["http://router.project-osrm.org/table/v1/driving/"]
+
+
+        pois = list(db.session.execute(
+            "SELECT id, latitude, longitude, opening_time, closing_time, time_to_spend, category, name, average_rating FROM pois WHERE city_id = :city_id",
+            {
+                'city_id': city_id
+            }
+        ))
+
+        url_list.append(str(source_lon))
+        url_list.append(',')
+        url_list.append(str(source_lat))
+        url_list.append(';')
+
+        url_list.append(str(destination_lon))
+        url_list.append(',')
+        url_list.append(str(destination_lat))
+        url_list.append(';')
+
+        for poi in pois:
+            url_list.append(str(poi.longitude))
+            url_list.append(',')
+            url_list.append(str(poi.latitude))
+            url_list.append(';')
+
+        if len(url_list) != 1:
+            url_list.pop()
+            url = ''.join(url_list)
+
+            from_source_res = requests.get(url=url, params={'sources': '0'})
+            from_source_data = from_source_res.json()
+
+            towards_destination_res = requests.get(url=url, params={'destinations': '1'})
+            towards_destination_data = towards_destination_res.json()
+            # print(data)
+            if from_source_res and towards_destination_res:
+                # source is -1 and destination is -2
+                distance_matrix_from_db['-1'] = {}
+                distance_matrix_from_db['-2'] = {}
+
+                distance_matrix_from_db['-1']['-1'] = from_source_data['durations'][0][0]/3600
+                distance_matrix_from_db['-1']['-2'] = from_source_data['durations'][0][1]/3600
+                ind = 2
+                for poi in pois:
+                    distance_matrix_from_db['-1'][str(poi.id)] = from_source_data['durations'][0][ind]/3600
+                    ind += 1
+
+
+                distance_matrix_from_db['-1']['-2'] = towards_destination_data['durations'][0][0]/3600
+                distance_matrix_from_db['-2']['-2'] = towards_destination_data['durations'][1][0]/3600
+                ind = 2
+                for poi in pois:
+                    distance_matrix_from_db[str(poi.id)]['-2'] = towards_destination_data['durations'][ind][0]/3600
+                    ind += 1
+
+                # return jsonify(distance_matrix_from_db)
+
+            else:
+                return jsonify({
+                    'from source': from_source_data,
+                    'towards destination': towards_destination_data
+                }), 500
+
+
+
+
+###############################
+
+
+
+        # pprint(distance_matrix_from_db)
+
         pois_from_db = db.session.execute(
             "SELECT id, latitude, longitude, opening_time, closing_time, time_to_spend, category, name, average_rating FROM pois WHERE city_id = :city_id",
             {
@@ -113,18 +199,15 @@ def generate_pbdfs_schedule(current_user):
             }
         )
 
-        distance_matrix_from_db = mongodb['distance_matrix'].find_one({
-            'city_id': city_id
-        })['distances']
 
-        pois = {}
+        pois_input = {}
         expected_ratings = {}
         for poi in pois_from_db:
             if str(poi.id) not in expected_ratings_from_db:
                 expected_ratings[str(poi.id)] = poi.average_rating
             else:
                 expected_ratings[str(poi.id)] = expected_ratings_from_db[str(poi.id)]
-            pois[str(poi.id)] = {
+            pois_input[str(poi.id)] = {
                 'latitude': poi.latitude,
                 'longitude': poi.longitude,
                 'opening_time': poi.opening_time,
@@ -134,17 +217,31 @@ def generate_pbdfs_schedule(current_user):
                 'name': poi.name,
             }
 
-        # print(distance_matrix_from_db)
+        pois_input['-1'] = {
+            'time_to_spend': 0,
+            'name': 'Source',
+            'latitude': source_lat,
+            'longitude': source_lon
+        }
+
+        pois_input['-2'] = {
+            'time_to_spend': 0,
+            'name': 'Destination',
+            'latitude': destination_lat,
+            'longitude': destination_lon
+        }
+
 
         schedule = get_pbdfs_schedule(
             user_ratings = expected_ratings,
-            pois = pois,
-            source = source,
-            destination = destination,
+            pois = pois_input,
+            source = '-1',
+            destination = '-2',
             departure_time = departure_time,
             time_budget = time_budget,
             distance_matrix = distance_matrix_from_db
         )
+        # schedule = {}
 
         db.session.commit()
 
@@ -154,12 +251,13 @@ def generate_pbdfs_schedule(current_user):
         })
 
     except Exception as e:
-        print(e)
+        print("Hii", e)
+        traceback.print_exc()
         db.session.rollback()
         return jsonify({
             "success": False,
             "message": "Something went wrong."
-        })
+        }), 500
 
     finally:
         db.session.close()
