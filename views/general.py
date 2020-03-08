@@ -220,9 +220,9 @@ def get_PoI(current_user):
         db.session.close()
 
 # ======================
-#   USER RATINGS API
+#   POST USER RATINGS API
 # ======================
-@general_bp.route('/user-ratings',methods=['POST'])
+@general_bp.route('/user-ratings',methods=['GET'])
 @token_required
 def getuserratings(current_user):
     try:
@@ -258,7 +258,7 @@ def getuserratings(current_user):
             return jsonify(
                 {
                     'success': True,
-                    'message': 'Rating Updated Successfully!1'
+                    'message': 'Rating Updated Successfully!'
                 }
             )
 
@@ -272,3 +272,45 @@ def getuserratings(current_user):
 
     finally:
         db.session.close()
+
+
+# ======================
+#   GET USER RATINGS API
+# ======================
+@general_bp.route('/getRatings', methods=['GET'])
+@token_required
+def getRatings(current_user):
+	try:
+		params = request.args
+
+		user = UserRatings.query.filter_by(user_id = current_user.id, poi_id = params['poi_id']).first()
+
+		if not user:
+			return jsonify(
+				{
+					'success': True,
+					'message': 'Rating not available',
+					'rating': 0
+				}
+				)
+
+		else:
+			rating = user.rating
+
+			return jsonify(
+				{
+					'success': True,
+					'message': 'Rating available',
+					'rating': rating
+				}
+				)
+
+	except Exception as e:
+		print(e)
+		return jsonify({
+			'success': False,
+			'message': 'Something went wrong.',
+			})
+
+	finally:
+		db.session.close()
