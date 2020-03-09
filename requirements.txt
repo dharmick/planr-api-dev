@@ -2,7 +2,9 @@ alembic==1.3.1
 astroid==2.3.3
 Babel==2.7.0
 bcrypt==3.1.7
+beautifulsoup4==4.8.2
 blinker==1.4
+bs4==0.0.1
 certifi==2019.11.28
 cffi==1.13.2
 chardet==3.0.4
@@ -33,11 +35,11 @@ kiwisolver==1.1.0
 lazy-object-proxy==1.4.3
 Mako==1.1.0
 MarkupSafe==1.1.1
-matplotlib==3.1.2
 mccabe==0.6.1
 numpy==1.18.0
 paramiko==2.6.0
 passlib==1.7.1
+pkg-resources==0.0.0
 psutil==5.5.1
 psycopg2==2.8.4
 psycopg2-binary==2.8.4
@@ -56,6 +58,7 @@ requests==2.22.0
 sendgrid==6.1.0
 simplejson==3.16.0
 six==1.13.0
+soupsieve==2.0
 speaklater==1.3
 SQLAlchemy==1.3.11
 sqlparse==0.2.4

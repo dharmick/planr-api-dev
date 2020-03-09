@@ -99,6 +99,8 @@ def user_signup():
             'success': True,
             'message': 'Signup successfull',
             'token': token,
+            'name': new_user.name,
+            'email': new_user.email
         }
     )
 
@@ -135,7 +137,9 @@ def user_login():
             {
                 'success': True,
                 'message': 'Login successfull',
-                'token': token
+                'token': token,
+                'name': user.name,
+                'email': user.email
             }
         )
 
@@ -172,7 +176,7 @@ def get_all_users(current_user):
         user_data['password'] = user.password
         user_data['admin'] = user.admin
         output.append(user_data)
-        
+
     return jsonify({'users': output})
 
 # ====================
@@ -194,7 +198,7 @@ def changepassword(current_user):
     #             'message': 'Authentication failed'
     #         }
     #     ), 401
-    
+
     data = request.get_json()
 
     # password matching
@@ -216,7 +220,7 @@ def changepassword(current_user):
                     'message': 'Passwords did not match. Enter again!',
                 }
             )
-        
+
     # password not matched
     return jsonify(
         {
@@ -226,7 +230,7 @@ def changepassword(current_user):
     ), 200
 
 # ====================
-#   FORGOT PASSWORD 
+#   FORGOT PASSWORD
 # ====================
 @authentication_bp.route('/forgot-password', methods=['POST'])
 def forgotpassword():
@@ -242,43 +246,51 @@ def forgotpassword():
                 'message': 'User not found!'
             }
         ), 401
-    
-    token = jwt.encode(
-            {
-                'public_id': user.public_id,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
-            },
-            app.config['SECRET_KEY']
-        )
 
-    # Call to send email function in eml.py
-    send(data['email'])
+    # token = jwt.encode(
+    #         {
+    #             'public_id': user.public_id,
+    #             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+    #         },
+    #         app.config['SECRET_KEY']
+    #     )
 
     OTP = OTP_generator()
-    new_otp = OTPS(
+
+    row = OTPS.query.filter_by(user_id = user.id).first()
+
+    if not row:
+        new_otp = OTPS(
         user_id = user.id,
         email = data['email'],
         otp = OTP
-    )
-    db.session.add(new_otp)
-    db.session.commit()
+        )
 
-    token_str = token.decode("utf-8")
-    lnk = 'http://127.0.0.1:5000/reset-password?token='+token_str 
-    
+        db.session.add(new_otp)
+        db.session.commit()
+
+    else:
+        row.otp = OTP
+        db.session.commit()
+
+    # Call to send email function in emailer.py
+    send(data['email'], OTP)
+
+    # token_str = token.decode("utf-8")
+    lnk = 'http://127.0.0.1:5000/reset-password?token='
+
     return jsonify(
         {
             'success': True,
             'message': 'Email sent succesfully!!',
             'OTP': OTP,
-            'token': token,
             'Link': lnk
         }
     ), 200
 
 
 # ====================
-#   VERIFY OTP 
+#   VERIFY OTP
 # ====================
 @authentication_bp.route('/verify-otp', methods=['POST'])
 def verifyotp():
@@ -304,32 +316,18 @@ def verifyotp():
 
 
 # ====================
-#   RESET PASSWORD 
+#   RESET PASSWORD
 # ====================
-@authentication_bp.route('/reset-password', methods=['GET','PUT'])
+@authentication_bp.route('/reset-password', methods=['POST'])
 def resetpassword():
 
     passw = request.get_json()
 
-    token = request.args.get('token')
-
-    if not token:
-        return jsonify({
-            'message': 'Token missing'
-        }), 401
-
-    try:
-        data = jwt.decode(token, app.config['SECRET_KEY'])
-        current_user = Users.query.filter_by(public_id=data['public_id']).first()
-    except:
-        return jsonify({
-            'message': 'Token invalid',
-        }), 401
-
+    user = Users.query.filter_by(email = passw['email']).first()
 
     if passw['newpassword'] == passw['confirmpassword']:
         hashed_password = generate_password_hash(passw['newpassword'], method='sha256')
-        current_user.password = hashed_password
+        user.password = hashed_password
         db.session.commit()
         return jsonify(
             {
