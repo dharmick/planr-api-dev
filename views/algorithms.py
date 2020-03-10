@@ -14,9 +14,9 @@ import traceback
 algorithms_bp = Blueprint('algorithms_bp', __name__)
 
 
-# ============================
+# =====================================
 #     GENERATE MATRIX FACTORIZATION
-# ============================
+# =====================================
 
 @algorithms_bp.route('/generate/matrix_factorization', methods=['GET'])
 # @token_required

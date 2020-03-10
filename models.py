@@ -21,7 +21,7 @@ class Cities(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30))
     description = db.Column(db.String(500))
-    image = db.Column(db.String(100))
+    image = db.Column(db.String(200))
 
     pois = db.relationship("Pois", backref='city')
     ratings = db.relationship("UserRatings", backref='city')
@@ -51,7 +51,7 @@ class Pois(db.Model):
     time_to_spend = db.Column(db.Float)
     category = db.Column(db.String(15))
     average_rating = db.Column(db.Float)
-    image = db.Column(db.String(100))
+    image = db.Column(db.String(200))
     description = db.Column(db.String(500))
     city_id = db.Column(db.Integer, db.ForeignKey('cities.id'))
 

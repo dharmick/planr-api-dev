@@ -12,4 +12,4 @@ eml2.py
 eml.py
 eml.pyc
 jwts.py
-./templates/planr.html
+templates/planr.html
