@@ -71,7 +71,7 @@ def user_signup():
                 'success': False,
                 'message': 'User already exists!'
             }
-        )
+        ), 400
 
     hashed_password = generate_password_hash(data['password'], method='sha256')
 
