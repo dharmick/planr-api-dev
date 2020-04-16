@@ -211,8 +211,8 @@ def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, 
         item_at_poi['type'] = 'at_poi'
         item_at_poi['place_id'] = poi
         item_at_poi['place_name'] = pois[poi]['name']
-        item_at_poi['latitude'] = pois[poi]['latitude']
-        item_at_poi['longitude'] = pois[poi]['longitude']
+        item_at_poi['latitude'] = float(pois[poi]['latitude'])
+        item_at_poi['longitude'] = float(pois[poi]['longitude'])
         item_at_poi['starting_time'] = time
 
         if poi != source and poi != destination:
