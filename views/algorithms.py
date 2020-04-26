@@ -215,6 +215,7 @@ def generate_pbdfs_schedule(current_user):
                 'time_to_spend': poi.time_to_spend,
                 'category': poi.category,
                 'name': poi.name,
+                'average_rating': poi.average_rating
             }
 
         pois_input['-1'] = {

@@ -170,6 +170,14 @@ def showPlot(user_ratings, pois, source, destination, departure_time, time_budge
     plt.show()
 
 
+def decimalToTime(time):
+    hours = str(int(time)).zfill(2)
+    minutes = str(int((time*60) % 60)).zfill(2)
+    return hours + ":" + minutes
+
+
+
+
 def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, time_budget, distance_matrix):
     global output
     output = {
@@ -213,20 +221,21 @@ def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, 
         item_at_poi['place_name'] = pois[poi]['name']
         item_at_poi['latitude'] = float(pois[poi]['latitude'])
         item_at_poi['longitude'] = float(pois[poi]['longitude'])
-        item_at_poi['starting_time'] = time
+        item_at_poi['starting_time'] = decimalToTime(time)
 
         if poi != source and poi != destination:
-            item_at_poi['time_to_spend'] = pois[poi]['time_to_spend']
-            time += item_at_poi['time_to_spend']
+            item_at_poi['average_rating'] = pois[poi]['average_rating']
+            item_at_poi['ending_time'] = decimalToTime(time + pois[poi]['time_to_spend'])
+            time += pois[poi]['time_to_spend']
         schedule.append(item_at_poi)
 
         if poi != destination:
             item_between_poi = {}
             item_between_poi['type'] = 'between_poi'
             item_between_poi['travel_mode'] = 'car'
-            item_between_poi['time_to_travel'] = distance_matrix[poi][output['route'][index+1]]
-            item_between_poi['starting_time'] = time
-            time += item_between_poi['time_to_travel']
+            item_between_poi['starting_time'] = decimalToTime(time)
+            item_between_poi['ending_time'] = decimalToTime(time + distance_matrix[poi][output['route'][index+1]])
+            time += distance_matrix[poi][output['route'][index+1]]
             schedule.append(item_between_poi)
 
     # pprint(tree)
