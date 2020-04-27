@@ -204,10 +204,13 @@ def generate_pbdfs_schedule(current_user):
         pois_input = {}
         expected_ratings = {}
         for poi in pois_from_db:
+            is_percent_match_available = False
+
             if str(poi.id) not in expected_ratings_from_db:
                 expected_ratings[str(poi.id)] = poi.average_rating
             else:
                 expected_ratings[str(poi.id)] = expected_ratings_from_db[str(poi.id)]
+                is_percent_match_available = True
             pois_input[str(poi.id)] = {
                 'latitude': poi.latitude,
                 'longitude': poi.longitude,
@@ -216,21 +219,24 @@ def generate_pbdfs_schedule(current_user):
                 'time_to_spend': poi.time_to_spend,
                 'category': poi.category,
                 'name': poi.name,
-                'average_rating': poi.average_rating
+                'average_rating': poi.average_rating,
+                'is_percent_match_available': is_percent_match_available
             }
 
         pois_input['-1'] = {
             'time_to_spend': 0,
             'name': 'Source',
             'latitude': source_lat,
-            'longitude': source_lon
+            'longitude': source_lon,
+            'is_percent_match_available': False,
         }
 
         pois_input['-2'] = {
             'time_to_spend': 0,
             'name': 'Destination',
             'latitude': destination_lat,
-            'longitude': destination_lon
+            'longitude': destination_lon,
+            'is_percent_match_available': False,
         }
 
 
