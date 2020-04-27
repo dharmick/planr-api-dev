@@ -22,6 +22,7 @@
 import copy
 from pprint import pprint
 import math
+from datetime import datetime
 # import matplotlib.pyplot as plt
 # from pbdfs_input_map import pois, departure_time, time_budget, user_ratings, source, destination
 
@@ -173,7 +174,8 @@ def showPlot(user_ratings, pois, source, destination, departure_time, time_budge
 def decimalToTime(time):
     hours = str(int(time)).zfill(2)
     minutes = str(int((time*60) % 60)).zfill(2)
-    return hours + ":" + minutes
+    d = datetime.strptime(hours + ":" + minutes, "%H:%M")
+    return d.strftime("%I:%M %p")
 
 
 
@@ -222,6 +224,9 @@ def get_pbdfs_schedule(user_ratings, pois, source, destination, departure_time, 
         item_at_poi['latitude'] = float(pois[poi]['latitude'])
         item_at_poi['longitude'] = float(pois[poi]['longitude'])
         item_at_poi['starting_time'] = decimalToTime(time)
+
+        if(pois[poi]['is_percent_match_available']):
+            item_at_poi['percent_match'] = int(user_ratings[str(poi)] * 20)
 
         if poi != source and poi != destination:
             item_at_poi['average_rating'] = pois[poi]['average_rating']
