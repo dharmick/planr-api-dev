@@ -14,6 +14,8 @@ class Users(db.Model):
 
     ratings = db.relationship("UserRatings", backref='user')
     otpstore = db.relationship("OTPS", backref='user')
+    wishlistplace = db.relationship("WishlistPlace", backref='user')
+    wishlistcity = db.relationship("WishlistCity", backref='user')
 
 class Cities(db.Model):
     __tablename__ = 'cities'
@@ -25,7 +27,7 @@ class Cities(db.Model):
 
     pois = db.relationship("Pois", backref='city')
     ratings = db.relationship("UserRatings", backref='city')
-
+    wishlistcity = db.relationship("WishlistCity", backref='city')
 
 class UserRatings(db.Model):
     __tablename__ = 'user_ratings'
@@ -56,6 +58,7 @@ class Pois(db.Model):
     city_id = db.Column(db.Integer, db.ForeignKey('cities.id'))
 
     ratings = db.relationship("UserRatings", backref='poi')
+    wishlistplace = db.relationship("WishlistPlace", backref='poi')
 
 class OTPS(db.Model):
     __tablename__= 'otps'
@@ -65,3 +68,18 @@ class OTPS(db.Model):
     email = db.Column(db.String(50))
     otp = db.Column(db.String(6))
 
+class WishlistPlace(db.Model):
+    __tablename__= 'wishlistplace'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    poi_id = db.Column(db.Integer, db.ForeignKey('pois.id'))
+    value = db.Column(db.Boolean)
+
+class WishlistCity(db.Model):
+    __tablename__= 'wishlistcity'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    city_id = db.Column(db.Integer, db.ForeignKey('cities.id'))
+    value = db.Column(db.Boolean)

@@ -171,6 +171,7 @@ def generate_pbdfs_schedule(current_user):
                 distance_matrix_from_db['-1']['-2'] = towards_destination_data['durations'][0][0]/3600
                 distance_matrix_from_db['-2']['-2'] = towards_destination_data['durations'][1][0]/3600
                 ind = 2
+                # print(distance_matrix_from_db['144'])
                 for poi in pois:
                     distance_matrix_from_db[str(poi.id)]['-2'] = towards_destination_data['durations'][ind][0]/3600
                     ind += 1

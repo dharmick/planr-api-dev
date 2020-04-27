@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request
 from authentication import token_required
 from database import db
 from models import UserRatings
+from models import WishlistPlace
+from models import WishlistCity
 general_bp = Blueprint('general_bp', __name__)
 import math
 
@@ -314,3 +316,100 @@ def getRatings(current_user):
 
 	finally:
 		db.session.close()
+
+
+# ==============================
+#   SEND WISHLISTED ITEM TO DB
+# ==============================
+@general_bp.route('/wishlist', methods=['POST'])
+@token_required
+def sendWishlist(current_user):
+    try:
+
+        data = request.get_json()
+
+        keys = []
+
+        for k in data.keys():
+            keys.append(k)
+
+        if keys[0]=='poi_id':
+
+            wishlist_from_db = WishlistPlace.query.filter_by(user_id = current_user.id, poi_id = data['poi_id']).first()
+
+            if not wishlist_from_db:
+
+                wishlistplace = WishlistPlace(
+                    user_id = current_user.id,
+                    poi_id = data['poi_id'],
+                    value = data['value']
+                )
+
+                db.session.add(wishlistplace)
+                db.session.commit()
+
+                return jsonify(
+                    {
+                        'success': True,
+                        'message': 'Wishlisted Successfully'
+                    }
+                )
+
+            else:
+
+                wishlist_from_db.value = data['value']
+                db.session.commit()
+
+                return jsonify(
+                    {
+                        'success': True,
+                        'message': 'Wishlist Updated Successfully!'
+                    }
+                )
+        
+        else:
+
+            # print("hii from city")
+
+            wishlist_from_db = WishlistCity.query.filter_by(user_id = current_user.id, city_id = data['city_id']).first()
+
+            if not wishlist_from_db:
+
+                wishlistcity = WishlistCity(
+                    user_id = current_user.id,
+                    city_id = data['city_id'],
+                    value = data['value']
+                )
+
+                db.session.add(wishlistcity)
+                db.session.commit()
+
+                return jsonify(
+                    {
+                        'success': True,
+                        'message': 'Wishlisted City Successfully'
+                    }
+                )
+
+            else:
+
+                wishlist_from_db.value = data['value']
+                db.session.commit()
+
+                return jsonify(
+                    {
+                        'success': True,
+                        'message': 'Wishlist Updated Successfully!'
+                    }
+                )
+
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": "Something went wrong.",
+        })
+
+    finally:
+        db.session.close()
