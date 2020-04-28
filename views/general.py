@@ -4,6 +4,8 @@ from database import db
 from models import UserRatings
 from models import WishlistPlace
 from models import WishlistCity
+from models import Cities
+from models import Pois
 general_bp = Blueprint('general_bp', __name__)
 import math
 
@@ -403,6 +405,73 @@ def sendWishlist(current_user):
                     }
                 )
 
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": "Something went wrong.",
+        })
+
+    finally:
+        db.session.close()
+
+    
+# ====================================
+#   RECEIVE WISHLISTED ITEM OF A USER
+# ====================================
+@general_bp.route('/wishlist', methods=['GET'])
+@token_required
+def getWishlist(current_user):
+    try:
+
+        wishlistedPlace = WishlistPlace.query.filter_by(user_id = current_user.id)
+        wishlistedCity = WishlistCity.query.filter_by(user_id = current_user.id)
+
+        """wishlist = { 
+            'pois': [
+                {
+                    'id': 92,
+                    'name':
+                    'description':
+                    'image':
+                    'rating':
+                }
+            ]       
+        }"""
+
+        wishlist = {
+            'pois': [],
+            'cities': []
+        }
+        
+        for p in wishlistedPlace:
+            poi = Pois.query.filter_by(id = p.poi_id).first()
+            place = {}
+            place['id'] = p.poi_id
+            place['name'] = poi.name
+            place['description'] = poi.description
+            place['image'] = poi.image
+            place['rating'] = poi.average_rating
+            wishlist['pois'].append(place)
+
+        for c in wishlistedCity:
+            city = Cities.query.filter_by(id = c.city_id).first()
+            cities = {}
+            cities['id'] = c.city_id
+            cities['name'] = city.name
+            cities['description'] = city.description
+            cities['image'] = city.image
+            wishlist['cities'].append(cities)
+
+        return jsonify(
+                    {
+                        'success': True,
+                        'wishlist': wishlist,
+                        'message': 'Wishlist Displayed Successfully'
+                    }
+                )
+    
     except Exception as e:
         print(e)
         db.session.rollback()
