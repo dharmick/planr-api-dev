@@ -60,6 +60,17 @@ def get_city(current_user):
 
         data = dict(city)
 
+        isWishlisted_from_db = WishlistCity.query.filter_by(user_id = current_user.id, city_id = city_id).first()
+
+        if isWishlisted_from_db:
+            # print("from if")
+            isWishlisted = isWishlisted_from_db.value
+        else:
+            isWishlisted = False
+            # print("from else")
+
+        data['isWishlisted'] = isWishlisted
+
         ratings_from_db = db.session.execute("""
             SELECT rating, count(rating)
             FROM user_ratings WHERE city_id = :city_id
@@ -138,6 +149,17 @@ def get_PoI(current_user):
 
         data = dict(poi)
 
+        isWishlisted_from_db = WishlistPlace.query.filter_by(user_id = current_user.id, poi_id = poi_id).first()
+
+        if isWishlisted_from_db:
+            # print("from if")
+            isWishlisted = isWishlisted_from_db.value
+        else:
+            isWishlisted = False
+            # print("from else")
+
+        data['isWishlisted'] = isWishlisted
+
         ratings_from_db = db.session.execute("""
             SELECT rating, count(rating)
             FROM user_ratings WHERE poi_id = :poi_id
@@ -202,7 +224,7 @@ def get_PoI(current_user):
             data['ratings'] = {
                 'total_count': total_ratings_count,
                 'average': avg,
-                'individual_ratings': ratings
+                'individual_ratings': ratings,
             }
 
         db.session.commit()
@@ -223,9 +245,9 @@ def get_PoI(current_user):
     finally:
         db.session.close()
 
-# ======================
+# =========================
 #   POST USER RATINGS API
-# ======================
+# =========================
 @general_bp.route('/user-ratings',methods=['GET'])
 @token_required
 def getuserratings(current_user):
