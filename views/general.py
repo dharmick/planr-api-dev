@@ -352,12 +352,7 @@ def sendWishlist(current_user):
 
         data = request.get_json()
 
-        keys = []
-
-        for k in data.keys():
-            keys.append(k)
-
-        if keys[0]=='poi_id':
+        if 'poi_id' in data:
 
             wishlist_from_db = WishlistPlace.query.filter_by(user_id = current_user.id, poi_id = data['poi_id']).first()
 
