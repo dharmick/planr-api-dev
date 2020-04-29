@@ -9,7 +9,6 @@ from models import Pois
 general_bp = Blueprint('general_bp', __name__)
 import math
 
-
 # ========================
 #   GET ALL CITIES
 # ========================
