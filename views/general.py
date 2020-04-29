@@ -390,7 +390,7 @@ def sendWishlist(current_user):
                         'message': 'Wishlist Updated Successfully!'
                     }
                 )
-        
+
         else:
 
             # print("hii from city")
@@ -438,7 +438,7 @@ def sendWishlist(current_user):
     finally:
         db.session.close()
 
-    
+
 # ====================================
 #   RECEIVE WISHLISTED ITEM OF A USER
 # ====================================
@@ -450,7 +450,7 @@ def getWishlist(current_user):
         wishlistedPlace = WishlistPlace.query.filter_by(user_id = current_user.id)
         wishlistedCity = WishlistCity.query.filter_by(user_id = current_user.id)
 
-        """wishlist = { 
+        """wishlist = {
             'pois': [
                 {
                     'id': 92,
@@ -459,14 +459,14 @@ def getWishlist(current_user):
                     'image':
                     'rating':
                 }
-            ]       
+            ]
         }"""
 
         wishlist = {
             'pois': [],
             'cities': []
         }
-        
+
         for p in wishlistedPlace:
             poi = Pois.query.filter_by(id = p.poi_id).first()
             place = {}
@@ -493,7 +493,7 @@ def getWishlist(current_user):
                         'message': 'Wishlist Displayed Successfully'
                     }
                 )
-    
+
     except Exception as e:
         print(e)
         db.session.rollback()
