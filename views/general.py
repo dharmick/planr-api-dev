@@ -6,8 +6,10 @@ from models import WishlistPlace
 from models import WishlistCity
 from models import Cities
 from models import Pois
-general_bp = Blueprint('general_bp', __name__)
 import math
+import json
+
+general_bp = Blueprint('general_bp', __name__)
 
 # ========================
 #   GET ALL CITIES
@@ -70,27 +72,7 @@ def get_city(current_user):
 
         data['isWishlisted'] = isWishlisted
 
-        ratings_from_db = db.session.execute("""
-            SELECT rating, count(rating)
-            FROM user_ratings WHERE city_id = :city_id
-            GROUP BY rating
-        """, {
-            "city_id": city_id
-        }).fetchall()
-
-        total_ratings_count = 0
-        sum = 0
-        ratings = []
-        for row in ratings_from_db:
-            sum += row.rating * row.count
-            total_ratings_count += row.count
-            ratings.append(dict(row))
-
-        if sum == 0 or total_ratings_count == 0:
-            	avg = 0
-        else:
-        	avg = sum/total_ratings_count
-        	avg = int(math.ceil(avg*10)) / 10
+        avg, total_ratings_count, ratings = getCityRatings(city_id)
 
         data['ratings'] = {
             'total_count': total_ratings_count,
@@ -123,6 +105,36 @@ def get_city(current_user):
 
     finally:
         db.session.close()
+
+# =====================================
+#   GET CITY RATINGS FROM DB FUNCTION
+# =====================================
+def getCityRatings(city_id):
+
+    ratings_from_db = db.session.execute("""
+            SELECT rating, count(rating)
+            FROM user_ratings WHERE city_id = :city_id
+            GROUP BY rating
+        """, {
+            "city_id": city_id
+        }).fetchall()
+
+    total_ratings_count = 0
+    sum = 0
+    ratings = []
+    for row in ratings_from_db:
+        sum += row.rating * row.count
+        total_ratings_count += row.count
+        ratings.append(dict(row))
+
+    if sum == 0 or total_ratings_count == 0:
+        avg = 0
+    else:
+        avg = sum/total_ratings_count
+        avg = int(math.ceil(avg*10)) / 10
+
+    return avg, total_ratings_count, ratings;
+
 
 # ========================
 #   GET POI DETAILS API
@@ -441,8 +453,8 @@ def sendWishlist(current_user):
 def getWishlist(current_user):
     try:
 
-        wishlistedPlace = WishlistPlace.query.filter_by(user_id = current_user.id)
-        wishlistedCity = WishlistCity.query.filter_by(user_id = current_user.id)
+        wishlistedPlace = WishlistPlace.query.filter_by(user_id = current_user.id, value=True)
+        wishlistedCity = WishlistCity.query.filter_by(user_id = current_user.id, value=True)
 
         """wishlist = {
             'pois': [
@@ -465,19 +477,24 @@ def getWishlist(current_user):
             poi = Pois.query.filter_by(id = p.poi_id).first()
             place = {}
             place['id'] = p.poi_id
+            place['city_id'] = poi.city_id
             place['name'] = poi.name
             place['description'] = poi.description
             place['image'] = poi.image
             place['rating'] = poi.average_rating
+            place['isWishlisted'] = True
             wishlist['pois'].append(place)
 
         for c in wishlistedCity:
             city = Cities.query.filter_by(id = c.city_id).first()
+            avg = getCityRatings(c.city_id)
             cities = {}
             cities['id'] = c.city_id
             cities['name'] = city.name
             cities['description'] = city.description
             cities['image'] = city.image
+            cities['rating'] = avg[0]
+            cities['isWishlisted'] = True
             wishlist['cities'].append(cities)
 
         return jsonify(
