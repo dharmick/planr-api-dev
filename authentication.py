@@ -170,6 +170,7 @@ def get_all_users(current_user):
 
     for user in users:
         user_data = {}
+        user_data['id'] = user.id
         user_data['public_id'] = user.public_id
         user_data['name'] = user.name
         user_data['email'] = user.email
