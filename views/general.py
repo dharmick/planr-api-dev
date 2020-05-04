@@ -36,6 +36,63 @@ def get_all_routes(current_user):
     finally:
         db.session.close()
 
+# ========================
+#   GET ALL POIS
+# ========================
+@general_bp.route('/getAllPois', methods=['GET'])
+@token_required
+def get_all_Pois(current_user):
+    try:
+        pois = db.session.execute(
+            "SELECT id, name FROM pois"
+        ).fetchall()
+        data = [ dict(row) for row in pois]
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "data": data
+        })
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify({
+            "message": "something went wrong",
+            "success": False
+        })
+    finally:
+        db.session.close()
+
+# ========================
+#   GET ALL CITIESS & POIS
+# ========================
+@general_bp.route('/getAllCitiesPois', methods=['GET'])
+@token_required
+def get_all_CitiesPois(current_user):
+    try:
+        pois = db.session.execute(
+            "SELECT id, name FROM pois"
+        ).fetchall()
+        cities = db.session.execute(
+            "SELECT id, name FROM cities"
+        ).fetchall()
+        dataPois = [ dict(row) for row in pois]
+        dataCities = [ dict(row) for row in cities]
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "cities": dataCities,
+            "pois": dataPois
+        })
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify({
+            "message": "something went wrong",
+            "success": False
+        })
+    finally:
+        db.session.close()
+
 # =====================
 #   GET CITY DETAILS
 # =====================
