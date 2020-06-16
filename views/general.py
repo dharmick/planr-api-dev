@@ -71,18 +71,25 @@ def get_all_Pois(current_user):
 def get_all_CitiesPois(current_user):
     try:
         pois = db.session.execute(
-            "SELECT id, name FROM pois"
+            "SELECT id, name, city_id FROM pois"
         ).fetchall()
         cities = db.session.execute(
             "SELECT id, name FROM cities"
         ).fetchall()
+        dct = {
+            "isCity": False
+        }
         dataPois = [ dict(row) for row in pois]
+        data = [ x.update(isCity=False) for x in dataPois]
         dataCities = [ dict(row) for row in cities]
+        data1 = [ x.update(isCity=True) for x in dataCities]
+        for x in dataCities:
+            dataPois.append(x)
+
         db.session.commit()
         return jsonify({
             "success": True,
-            "cities": dataCities,
-            "pois": dataPois
+            "data": dataPois
         })
     except Exception as e:
         print(e)
