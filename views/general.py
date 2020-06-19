@@ -45,7 +45,7 @@ def get_all_routes(current_user):
 def get_all_Pois(current_user):
     try:
         pois = db.session.execute(
-            "SELECT id, name FROM pois"
+            "SELECT id, name, image, description, average_rating FROM pois"
         ).fetchall()
         data = [ dict(row) for row in pois]
         db.session.commit()
