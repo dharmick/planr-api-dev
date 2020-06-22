@@ -24,7 +24,7 @@ def send(t_email, otp):
     html_template = templateEnv.get_template(template_name + ".html")
     html_to_send = html_template.render()
     
-    from_email = 'help.planr@gmail.com'
+    from_email = 'help@planr.com'
     to_emails = t_email
 
     message = Mail(
@@ -37,7 +37,9 @@ def send(t_email, otp):
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         response = sg.send(message)
         print(response.status_code)
-        print(response.body)
-        print(response.headers)
+        # print(response.body)
+        # print(response.headers)
+        return response.status_code;
     except Exception as e:
         print(e)
+        return '500';

@@ -19,9 +19,13 @@ general_bp = Blueprint('general_bp', __name__)
 def get_all_routes(current_user):
     try:
         cities = db.session.execute(
-            "SELECT id, name FROM cities"
+            "SELECT id, name, description, image FROM cities"
         ).fetchall()
         data = [ dict(row) for row in cities]
+        for x in data:
+            avg = getCityRatings(x['id'])
+            x.update(rating=avg[0])
+        
         db.session.commit()
         return jsonify({
             "success": True,
@@ -45,7 +49,7 @@ def get_all_routes(current_user):
 def get_all_Pois(current_user):
     try:
         pois = db.session.execute(
-            "SELECT id, name FROM pois"
+            "SELECT id, name, image, description, average_rating, city_id FROM pois"
         ).fetchall()
         data = [ dict(row) for row in pois]
         db.session.commit()

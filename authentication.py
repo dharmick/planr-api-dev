@@ -275,19 +275,30 @@ def forgotpassword():
         db.session.commit()
 
     # Call to send email function in emailer.py
-    send(data['email'], OTP)
+    status = send(data['email'], OTP)
 
     # token_str = token.decode("utf-8")
     lnk = 'http://127.0.0.1:5000/reset-password?token='
 
-    return jsonify(
-        {
-            'success': True,
-            'message': 'Email sent succesfully!!',
-            'OTP': OTP,
-            'Link': lnk
-        }
-    ), 200
+    if status == 202:
+
+        return jsonify(
+            {
+                'success': True,
+                'message': 'Email sent succesfully!!',
+                'OTP': OTP,
+                'Link': lnk
+            }
+        ), 200
+
+    else:
+
+        return jsonify(
+            {
+                'success': False,
+                'message': 'Please Try Again!!',
+            }
+        ), 200
 
 
 # ====================
