@@ -200,28 +200,31 @@ def generate_pbdfs_schedule(current_user):
             }
         )
 
+        pois_exclude = [91,98,99,100,136,114]
+        # pois_exclude = []
 
         pois_input = {}
         expected_ratings = {}
         for poi in pois_from_db:
             is_percent_match_available = False
 
-            if str(poi.id) not in expected_ratings_from_db:
-                expected_ratings[str(poi.id)] = poi.average_rating
-            else:
-                expected_ratings[str(poi.id)] = expected_ratings_from_db[str(poi.id)]
-                is_percent_match_available = True
-            pois_input[str(poi.id)] = {
-                'latitude': poi.latitude,
-                'longitude': poi.longitude,
-                'opening_time': poi.opening_time,
-                'closing_time': poi.closing_time,
-                'time_to_spend': poi.time_to_spend,
-                'category': poi.category,
-                'name': poi.name,
-                'average_rating': poi.average_rating,
-                'is_percent_match_available': is_percent_match_available
-            }
+            if poi.id not in pois_exclude:
+                if str(poi.id) not in expected_ratings_from_db:
+                    expected_ratings[str(poi.id)] = poi.average_rating
+                else:
+                    expected_ratings[str(poi.id)] = expected_ratings_from_db[str(poi.id)]
+                    is_percent_match_available = True
+                pois_input[str(poi.id)] = {
+                    'latitude': poi.latitude,
+                    'longitude': poi.longitude,
+                    'opening_time': poi.opening_time,
+                    'closing_time': poi.closing_time,
+                    'time_to_spend': poi.time_to_spend,
+                    'category': poi.category,
+                    'name': poi.name,
+                    'average_rating': poi.average_rating,
+                    'is_percent_match_available': is_percent_match_available
+                }
 
         pois_input['-1'] = {
             'time_to_spend': 0,
