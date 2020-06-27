@@ -100,6 +100,7 @@ def generate_pbdfs_schedule(current_user):
         destination_lon = data['destination_lon']
         departure_time = float(data['departure_time'])
         time_budget = float(data['time_budget'])
+        pois_exclude = data['pois_exclude']
 
 
         expected_ratings_from_db = mongodb['expected_ratings'].find_one({
@@ -149,11 +150,21 @@ def generate_pbdfs_schedule(current_user):
             url_list.pop()
             url = ''.join(url_list)
 
-            from_source_res = requests.get(url=url, params={'sources': '0'})
-            from_source_data = from_source_res.json()
+            try:
 
-            towards_destination_res = requests.get(url=url, params={'destinations': '1'})
-            towards_destination_data = towards_destination_res.json()
+                from_source_res = requests.get(url=url, params={'sources': '0'})
+                from_source_data = from_source_res.json()
+
+                towards_destination_res = requests.get(url=url, params={'destinations': '1'})
+                towards_destination_data = towards_destination_res.json()
+
+            except:
+                return jsonify({
+                    'message': 'OSRM request unsuccessfull'
+                }), 500
+            
+
+            
             # print(data)
             if from_source_res and towards_destination_res:
                 # source is -1 and destination is -2
@@ -181,7 +192,8 @@ def generate_pbdfs_schedule(current_user):
             else:
                 return jsonify({
                     'from source': from_source_data,
-                    'towards destination': towards_destination_data
+                    'towards destination': towards_destination_data,
+                    'message': 'OSRM no data found'
                 }), 500
 
 
@@ -200,15 +212,13 @@ def generate_pbdfs_schedule(current_user):
             }
         )
 
-        pois_exclude = [91,98,99,100,136,114]
-        # pois_exclude = []
 
         pois_input = {}
         expected_ratings = {}
         for poi in pois_from_db:
             is_percent_match_available = False
 
-            if poi.id not in pois_exclude:
+            if str(poi.id) not in pois_exclude:
                 if str(poi.id) not in expected_ratings_from_db:
                     expected_ratings[str(poi.id)] = poi.average_rating
                 else:
