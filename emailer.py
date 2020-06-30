@@ -15,7 +15,7 @@ def send(t_email, otp):
 
     soup.find(text="Reset Password").replaceWith(str(otp))
 
-    with open("./templates/planr.html", "w", encoding='windows-1252') as file:
+    with open("./templates/planr.html", "w", encoding='utf-8') as file:
         file.write(str(soup))
 
     template_name = "planr"
