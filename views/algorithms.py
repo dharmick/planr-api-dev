@@ -103,13 +103,19 @@ def generate_pbdfs_schedule(current_user):
         pois_exclude = data['pois_exclude']
 
 
-        expected_ratings_from_db = mongodb['expected_ratings'].find_one({
+        expected_ratings_from_db_raw = mongodb['expected_ratings'].find_one({
             'city_id': int(city_id),
             'user_id': current_user.id
         }, {
             'expected_rating': 1,
             '_id': 0
-        })['expected_rating']
+        })
+
+        if(expected_ratings_from_db_raw is None):
+            expected_ratings_from_db = {}
+        else:
+            expected_ratings_from_db = expected_ratings_from_db_raw['expected_rating']
+        
 
 
 
